@@ -1,5 +1,5 @@
 # leaflet-pointable.js
-A Leaflet plugin that allows that allows to interact with semi-transparent tiled overlays
+A Leaflet plugin that allows to interact with semi-transparent tiled overlays
 
 _For a working example see [demo](https://raruto.github.io/examples/leaflet-pointable/leaflet-pointable.html)_
 
