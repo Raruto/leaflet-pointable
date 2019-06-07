@@ -1,0 +1,28 @@
+{
+  "name": "leaflet-pointable",
+  "version": "0.0.1",
+  "description": "A Leaflet plugin that allows that allows to interact with semi-transparent tiled overlays",
+  "main": "leaflet-pointable.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Raruto/leaflet-pointable.git"
+  },
+  "keywords": [
+    "leaflet",
+    "pointable",
+    "overlay",
+    "transparency"
+  ],
+  "author": "Raruto",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/Raruto/leaflet-pointable/issues"
+  },
+  "homepage": "https://github.com/Raruto/leaflet-pointable#readme",
+  "peerDependencies": {
+    "leaflet": "^1.3.4"
+  }
+}
