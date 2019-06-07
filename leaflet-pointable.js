@@ -4,7 +4,7 @@
  * @author    Raruto
  * @license   GPL-3.0+
  * @link https://github.com/Raruto/leaflet-pointable
- * @desc Leaflet plugin that allows that allows to interact with semi-transparent tiled overlays
+ * @desc Leaflet plugin that allows to interact with semi-transparent tiled overlays
  */
 
 (function() {
