@@ -55,7 +55,7 @@ _For a working example see [demo](https://raruto.github.io/examples/leaflet-poin
       control.addOverlay(Overlay, "Hiking Routes");
 
       map.on("pointable_mouseclick",function(e){
-        map.openPopup("Clicked overlay: " + e.latlng.lat + "," e.latlng.lng, e.latlng);
+        map.openPopup("Clicked overlay: " + e.latlng.lat + "," + e.latlng.lng, e.latlng);
       });
 
     </script>
