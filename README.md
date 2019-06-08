@@ -16,7 +16,7 @@ _For a working example see [demo](https://raruto.github.io/examples/leaflet-poin
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.3.4/dist/leaflet.js"></script>
     <!-- Leaflet-Pointable -->
-    <script src="https://unpkg.com/leaflet-pointable@0.0.1/leaflet-pointable.js"></script>
+    <script src="https://unpkg.com/leaflet-pointable@latest/leaflet-pointable.js"></script>
     ...
     </head>
     ```
@@ -52,10 +52,10 @@ _For a working example see [demo](https://raruto.github.io/examples/leaflet-poin
       });
       Overlay.addTo(map);
 
-      control.addOverlay(Overlay, "Hiking Routes");
+      control.addOverlay(Overlay, "ON / OFF");
 
       map.on("pointable_mouseclick",function(e){
-        map.openPopup("Clicked overlay: " + e.latlng.lat + "," + e.latlng.lng, e.latlng);
+        map.openPopup("<b>Clicked overlay</b>: " + e.latlng.lat + "," + e.latlng.lng, e.latlng);
       });
 
     </script>
