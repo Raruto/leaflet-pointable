@@ -54,6 +54,10 @@
     this.fire("pointable_mouseclick", e);
   };
 
+  L.Map.prototype.isPointablePixel = function() {
+    return !!this._isPointablePixel;
+  };
+
   L.GridLayer.include({
     onAdd: function(map) {
       if (this.options.pointable) {
@@ -77,7 +81,8 @@
 
     _pointableMouseTracker: function(e) {
       var coords = this._getPointableTileCoords(e.latlng.lat, e.latlng.lng, this._map.getZoom());
-      var img = this._getPointableTile(coords);
+      var tile = this._getPointableTile(coords);
+      var img = this._getPointableImage(tile);
       var pixel = this._getPointablePixel(img, e.originalEvent);
       this._isPointablePixel = this._hasPointablePixelData(img, pixel);
     },
@@ -97,10 +102,19 @@
       if (!this._tiles) return;
       var key = this._tileCoordsToKey(coords);
       var tile = this._tiles[key];
+      return tile;
+    },
+
+    _getPointableImage: function(tile) {
       if (!tile) return;
-      var img = tile.el.tagName.toLowerCase() === 'img' ? tile.el : tile.el.querySelector('img');
+      var tag = tile.el.tagName.toLowerCase();
+      var img = (tag == 'img' || tag == 'canvas') ? tile.el : tile.el.querySelector(tag);
       if (!img) return;
-      this._downloadPointableTile(img.src, this._onPointableTileLoaded); // crossOrigin = "Anonymous"
+      if (tag == 'img') {
+        this._downloadPointableTile(img.src, this._onPointableTileLoaded); // crossOrigin = "Anonymous"
+      } else if (tag == 'canvas') {
+        this.tileContext = img.getContext("2d");
+      }
       return img;
     },
 
