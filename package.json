@@ -1,6 +1,6 @@
 {
   "name": "leaflet-pointable",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "A Leaflet plugin that allows to interact with semi-transparent tiled overlays",
   "main": "leaflet-pointable.js",
   "scripts": {
