@@ -6,158 +6,180 @@
  * @link https://github.com/Raruto/leaflet-pointable
  * @desc Leaflet plugin that allows to interact with semi-transparent tiled overlays
  */
-
-(function() {
-
-  var gridProto = L.GridLayer.prototype;
-  var onAddGridProto = gridProto.onAdd;
-  var onRemoveGridProto = gridProto.onRemove;
+(() => {
+  const gridProto = L.GridLayer.prototype;
+  const onAddGridProto = gridProto.onAdd;
+  const onRemoveGridProto = gridProto.onRemove;
 
   gridProto.options.pointable = false;
 
   L.Map.addInitHook(function() {
     this._defaultCursor = this._container.style.cursor;
     this._pointableLayers = {};
-    this.on("mousemove", this._handlePointableMouseMove, this);
+    this.on(L.version.startsWith('1.') ? "mousemove" : "pointermove", this._handlePointableMouseMove, this);
     this.on("click", this._handlePointableMouseClick, this);
   });
 
-  L.Map.prototype.addPointableLayer = function(layer) {
-    this._pointableLayers[layer._leaflet_id] = layer;
-    return this._pointableLayers;
-  };
+  L.Map.include({
+    addPointableLayer(layer) {
+      this._pointableLayers[layer._leaflet_id] = layer;
+      return this._pointableLayers;
+    },
 
-  L.Map.prototype.removePointableLayer = function(layer) {
-    for (var i in this._pointableLayers) {
-      if (i == layer._leaflet_id) {
-        delete this._pointableLayers[i];
+    removePointableLayer(layer) {
+      delete this._pointableLayers[layer._leaflet_id];
+      layer._isPointablePixel = false;
+      this._updatePointableState();
+      return this._pointableLayers;
+    },
+
+    // Layers are sampled here (not in their own listeners) so that the state
+    // is never one event behind the event being handled.
+    _updatePointableState(e) {
+      this._isPointablePixel = false;
+      for (const i in this._pointableLayers) {
+        if (e) this._pointableLayers[i]._pointableMouseTracker(e);
+        if (this._pointableLayers[i].isPointablePixel()) {
+          this._isPointablePixel = true;
+          if (!e) break;
+        }
       }
-    }
-    return this._pointableLayers;
-  };
+      this._container.style.cursor = this._isPointablePixel ? 'pointer' : this._defaultCursor;
+    },
 
-  L.Map.prototype._handlePointableMouseMove = function(e) {
-    this._isPointablePixel = false;
-    for (var i in this._pointableLayers) {
-      if (this._pointableLayers[i].isPointablePixel()) {
-        this._isPointablePixel = true;
-        break;
-      }
-    }
-    this._container.style.cursor = this._isPointablePixel ? 'pointer' : this._defaultCursor;
-    if (!this._isPointablePixel) return;
-    this.fire("pointable_mousemove", e);
-  };
+    _handlePointableMouseMove(e) {
+      this._updatePointableState(e);
+      if (!this._isPointablePixel) return;
+      this.fire("pointable_mousemove", e);
+    },
 
-  L.Map.prototype._handlePointableMouseClick = function(e) {
-    if (!this._isPointablePixel) return;
-    this.fire("pointable_mouseclick", e);
-  };
+    _handlePointableMouseClick(e) {
+      this._updatePointableState(e);
+      if (!this._isPointablePixel) return;
+      this.fire("pointable_mouseclick", e);
+    },
 
-  L.Map.prototype.isPointablePixel = function() {
-    return !!this._isPointablePixel;
-  };
+    isPointablePixel() {
+      return !!this._isPointablePixel;
+    },
+  });
 
   L.GridLayer.include({
-    onAdd: function(map) {
+    onAdd(map) {
       if (this.options.pointable) {
         map.addPointableLayer(this);
-        map.on("mousemove", this._pointableMouseTracker, this);
       }
       onAddGridProto.call(this, map);
     },
 
-    onRemove: function(map) {
+    onRemove(map) {
       if (this.options.pointable) {
         map.removePointableLayer(this);
-        map.off("mousemove", this._pointableMouseTracker, this);
       }
       onRemoveGridProto.call(this, map);
     },
 
-    isPointablePixel: function() {
+    isPointablePixel() {
       return !!this._isPointablePixel;
     },
 
-    _pointableMouseTracker: function(e) {
-      var coords = this._getPointableTileCoords(e.latlng.lat, e.latlng.lng, this._map.getZoom());
-      var tile = this._getPointableTile(coords);
-      var img = this._getPointableImage(tile);
-      var pixel = this._getPointablePixel(img, e.originalEvent);
+    _pointableMouseTracker(e) {
+      const tile = this._getPointableTile(e.latlng);
+      const img = this._getPointableImage(tile);
+      const pixel = this._getPointablePixel(img, e.originalEvent);
       this._isPointablePixel = this._hasPointablePixelData(img, pixel);
     },
 
-    _getPointableTileCoords: function(lat, lon, zoom) {
-      var DEG_TO_RAD = Math.PI / 180;
-      var xtile = parseInt(Math.floor((lon + 180) / 360 * (1 << zoom)));
-      var ytile = parseInt(Math.floor((1 - Math.log(Math.tan(lat * DEG_TO_RAD) + 1 / Math.cos(lat * DEG_TO_RAD)) / Math.PI) / 2 * (1 << zoom)));
+    // Tile lookup follows the layer's own grid (CRS, tile size, zoom offset, wrapping).
+    _getPointableTile(latlng) {
+      const zoom = this._tileZoom;
+      if (!this._tiles || zoom === undefined || !latlng) return;
+      const coords = this._map.project(latlng, zoom).unscaleBy(this.getTileSize()).floor();
+      coords.z = zoom;
+      return this._tiles[this._tileCoordsToKey(coords)];
+    },
+
+    _getPointableImage(tile) {
+      if (!tile || !tile.el) return;
+      const tag = tile.el.tagName.toLowerCase();
+      return (tag == 'img' || tag == 'canvas') ? tile.el : tile.el.querySelector('img, canvas');
+    },
+
+    _getPointablePixel(img, e) {
+      if (!img || !e || e.clientX === undefined) return;
+      const rect = img.getBoundingClientRect();
+      if (!rect.width || !rect.height) return;
+      const width = img.naturalWidth || img.width;
+      const height = img.naturalHeight || img.height;
       return {
-        x: xtile,
-        y: ytile,
-        z: zoom,
+        x: Math.floor((e.clientX - rect.left) * width / rect.width),
+        y: Math.floor((e.clientY - rect.top) * height / rect.height),
       };
     },
 
-    _getPointableTile: function(coords) {
-      if (!this._tiles) return;
-      var key = this._tileCoordsToKey(coords);
-      var tile = this._tiles[key];
-      return tile;
-    },
-
-    _getPointableImage: function(tile) {
-      if (!tile) return;
-      var tag = tile.el.tagName.toLowerCase();
-      var img = (tag == 'img' || tag == 'canvas') ? tile.el : tile.el.querySelector(tag);
-      if (!img) return;
-      if (tag == 'img') {
-        this._downloadPointableTile(img.src, this._onPointableTileLoaded); // crossOrigin = "Anonymous"
-      } else if (tag == 'canvas') {
-        this.tileContext = img.getContext("2d");
+    _hasPointablePixelData(img, pixelPoint) {
+      if (!img || !pixelPoint) return false;
+      const ctx = this._getPointableContext(img);
+      if (!ctx) return false;
+      try {
+        return ctx.getImageData(pixelPoint.x, pixelPoint.y, 1, 1).data[3] != 0;
+      } catch (err) {
+        this._pointableError('cannot read tile pixel', img.src, err);
+        return false;
       }
-      return img;
     },
 
-    _getPointablePixel: function(img, e) {
-      if (!img) return;
-      var imgRect = img.getBoundingClientRect();
-      var imgPos = {
-        pageY: (imgRect.top + window.scrollY).toFixed(0),
-        pageX: (imgRect.left + window.scrollX).toFixed(0)
-      };
-      var mousePos = {
-        x: e.pageX - imgPos.pageX,
-        y: e.pageY - imgPos.pageY
-      };
-      return mousePos;
+    _getPointableContext(img) {
+      if (img.tagName.toLowerCase() == 'canvas') return img.getContext("2d");
+      if (!img.src) return;
+      const cache = img._pointableCache;
+      if (cache && cache.src == img.src) return cache.ctx;
+      if (!img.complete || !img.naturalWidth) return;
+      const ctx = this._drawPointableImage(img);
+      try {
+        ctx.getImageData(0, 0, 1, 1);
+      } catch (err) {
+        // Tainted by a cross-origin tile: reload it with CORS enabled.
+        this._pointableError('tile canvas is tainted, retrying with CORS', img.src, err);
+        this._downloadPointableTile(img);
+        return;
+      }
+      img._pointableCache = { src: img.src, ctx: ctx };
+      return ctx;
     },
 
-    _hasPointablePixelData: function(img, pixelPoint) {
-      if (!this.tileContext || !pixelPoint) return;
-      var pixelData = this.tileContext.getImageData(pixelPoint.x, pixelPoint.y, 1, 1).data;
-      var alpha = pixelData[3];
-      var hasTileData = (alpha != 0);
-      return hasTileData;
+    // Reported once per message and tile, so mousemove cannot flood the console.
+    _pointableError(message, src, err) {
+      const key = message + ' ' + src;
+      this._pointableErrors = this._pointableErrors || {};
+      if (this._pointableErrors[key]) return;
+      this._pointableErrors[key] = true;
+      console.error('leaflet-pointable: ' + message + ' (' + src + ')', err);
+      this.fire('pointable_error', { message: message, src: src, error: err });
     },
 
-    _downloadPointableTile: function(imageSrc, callback) {
-      if (!imageSrc) return;
-      img = new Image();
+    _downloadPointableTile(tileImg) {
+      const src = tileImg.src;
+      if (tileImg._pointableLoading == src) return;
+      tileImg._pointableLoading = src;
+      const img = new Image();
       img.crossOrigin = "Anonymous";
-      img.addEventListener("load", callback.bind(this, img), false);
-      img.src = imageSrc;
+      img.addEventListener("load", function() {
+        tileImg._pointableCache = { src: src, ctx: this._drawPointableImage(img) };
+      }.bind(this), false);
+      img.addEventListener("error", function() {
+        this._pointableError('tile reload with CORS failed', src);
+      }.bind(this), false);
+      img.src = src;
     },
 
-    _onPointableTileLoaded: function(img) {
-      this.tileCanvas = document.createElement("canvas");
-      this.tileContext = this.tileCanvas.getContext("2d");
-
-      var tileSize = this.getTileSize();
-      this.tileCanvas.width = tileSize.x;
-      this.tileCanvas.height = tileSize.y;
-
-      this.tileContext.drawImage(img, 0, 0);
+    _drawPointableImage(img) {
+      const canvas = document.createElement("canvas");
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      const ctx = canvas.getContext("2d", { willReadFrequently: true });
+      ctx.drawImage(img, 0, 0);
+      return ctx;
     },
   });
-
 })();
