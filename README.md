@@ -28,7 +28,7 @@ _For a working example see [demo](https://raruto.github.io/leaflet-pointable/exa
     ...
     </body>
     ```
-3. **create your first simple Ã¢â‚¬Å“leaflet-pointable slippy map**
+3. **create your first simple “leaflet-pointable” slippy map**
     ```html
     <script>
       const map = new L.Map('map');
