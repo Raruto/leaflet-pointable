@@ -38,14 +38,14 @@ _For a working example see [demo](https://raruto.github.io/leaflet-pointable/exa
         collapsed: false
       }).addTo(map);
 
-      const Basemap = L.TileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+      const Basemap = new L.TileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
         maxZoom: 17,
         attribution: 'Map data: &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)',
         opacity: 0.90
         });
       Basemap.addTo(map);
 
-      const Overlay = L.TileLayer('https://tile.waymarkedtrails.org/{id}/{z}/{x}/{y}.png', {
+      const Overlay = new L.TileLayer('https://tile.waymarkedtrails.org/{id}/{z}/{x}/{y}.png', {
         id: 'hiking',
         pointable: true,
         attribution: '&copy; <a href="http://waymarkedtrails.org">Sarah Hoffmann</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)',
@@ -63,7 +63,7 @@ _For a working example see [demo](https://raruto.github.io/leaflet-pointable/exa
 
 ---
 
-**Compatible with:** Leaflet@1.9.4 and Leafletl@2.0.0-alpha.1.
+**Compatible with:** Leaflet@1.9.4 and Leaflet@2.0.0-beta.3.
 
 ---
 

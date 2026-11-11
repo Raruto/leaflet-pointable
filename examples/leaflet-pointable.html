@@ -36,7 +36,7 @@
 		const map = new L.Map('map');
 		map.setView(new L.LatLng(45, 9.5), 5);
 
-		const control = new L.Control.Layers(null, null, {
+		const control = new (L.LayersControl || L.Control.Layers)(null, null, {
 			collapsed: false
 		}).addTo(map);
 

@@ -8,19 +8,20 @@
  */
 (() => {
   const gridProto = L.GridLayer.prototype;
+  const LeafletMap = L.LeafletMap || L.Map;
   const onAddGridProto = gridProto.onAdd;
   const onRemoveGridProto = gridProto.onRemove;
 
-  gridProto.options.pointable = false;
+  L.GridLayer.mergeOptions({ pointable: false });
 
-  L.Map.addInitHook(function() {
+  LeafletMap.addInitHook(function() {
     this._defaultCursor = this._container.style.cursor;
     this._pointableLayers = {};
     this.on(L.version.startsWith('1.') ? "mousemove" : "pointermove", this._handlePointableMouseMove, this);
     this.on("click", this._handlePointableMouseClick, this);
   });
 
-  L.Map.include({
+  LeafletMap.include({
     addPointableLayer(layer) {
       this._pointableLayers[layer._leaflet_id] = layer;
       return this._pointableLayers;

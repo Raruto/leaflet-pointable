@@ -4,7 +4,11 @@
   "description": "A Leaflet plugin that allows to interact with semi-transparent tiled overlays",
   "main": "leaflet-pointable.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "esbuild leaflet-pointable.js --minify --outfile=leaflet-pointable.min.js",
+    "test": "npm run build && cucumber-js",
+    "preversion": "node build/version.js",
+    "version": "npm run build && git add -A",
+    "postversion": "npm publish --access public && git push --follow-tags"
   },
   "repository": {
     "type": "git",
@@ -22,7 +26,12 @@
     "url": "https://github.com/Raruto/leaflet-pointable/issues"
   },
   "homepage": "https://github.com/Raruto/leaflet-pointable#readme",
+  "devDependencies": {
+    "@cucumber/cucumber": "^13.3.0",
+    "esbuild": "^0.28.2",
+    "playwright": "1.64.1"
+  },
   "peerDependencies": {
-    "leaflet": "^1.9.4 || 2.0.0-alpha.1"
+    "leaflet": "^1.9.4 || ^2.0.0-beta.3"
   }
 }
