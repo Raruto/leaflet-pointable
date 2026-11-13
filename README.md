@@ -20,7 +20,7 @@ _For a working example see [demo](https://raruto.github.io/leaflet-pointable/exa
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <!-- Leaflet-Pointable -->
-    <script src="https://unpkg.com/leaflet-pointable@0.2.1/leaflet-pointable.js"></script>
+    <script src="https://unpkg.com/leaflet-pointable@0.2.2/leaflet-pointable.js"></script>
     ...
     </head>
     ```
