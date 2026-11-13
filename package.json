@@ -4,6 +4,7 @@
   "description": "A Leaflet plugin that allows to interact with semi-transparent tiled overlays",
   "main": "leaflet-pointable.js",
   "scripts": {
+    "dev": "node build/server.js",
     "build": "esbuild leaflet-pointable.js --minify --outfile=leaflet-pointable.min.js",
     "test": "npm run build && cucumber-js",
     "preversion": "node build/version.js",
